@@ -1,0 +1,45 @@
+api_endpoint: ""
+api_token: ""
+device_id: d6f4efe7-f9ad-41e5-bdc2-1f68576f0630
+device_name: Humbertos-MacBook-Pro.local
+deviceid: test-device-id
+devicename: Test Device
+gcs:
+    bucket: ""
+    credentials_file: ""
+    project_id: ""
+local:
+    root_dir: ""
+log_level: info
+log_path: ""
+loglevel: info
+max_concurrency: 4
+minio:
+    access_key: minioadmin
+    bucket: sync-manager
+    endpoint: localhost:9000
+    region: us-east-1
+    secret_key: minioadmin
+    use_ssl: false
+s3:
+    access_key: ""
+    accesskey: minioadmin
+    bucket: test-bucket
+    endpoint: http://localhost:9000
+    path_style: false
+    region: us-east-1
+    secret_key: ""
+    secretkey: minioadmin
+    use_ssl: true
+    usessl: false
+storage_provider: minio
+sync_folders:
+    - id: folder-1
+      path: /Users/martinshumberto/.ssh
+      enabled: true
+      exclude: []
+      priority: 0
+      twowaysync: true
+sync_interval: 5m0s
+syncfolders: []
+throttle_bytes: 0

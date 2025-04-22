@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package sync;
+
+option go_package = "github.com/martinshumberto/sync-manager/common/proto";
+
+import "google/protobuf/timestamp.proto";
+
+// SyncService defines the service for file synchronization
+service SyncService {
+  // NotifyFileChange notifies other devices about a file change
+  rpc NotifyFileChange(FileChangeNotification) returns (FileChangeResponse) {}
+  
+  // RegisterDevice registers a new device for sync notifications
+  rpc RegisterDevice(DeviceRegistration) returns (DeviceRegistrationResponse) {}
+  
+  // SubscribeToChanges subscribes to changes for a specific folder
+  rpc SubscribeToChanges(SubscriptionRequest) returns (stream FileChangeNotification) {}
+}
+
+// FileChangeNotification is sent when a file changes
+message FileChangeNotification {
+  string device_id = 1;
+  string file_path = 2;
+  string folder_id = 3;
+  ChangeType change_type = 4;
+  google.protobuf.Timestamp timestamp = 5;
+  string file_hash = 6;
+  int64 file_size = 7;
+  string version_id = 8;
+}
+
+// ChangeType defines the type of file change
+enum ChangeType {
+  UNKNOWN = 0;
+  CREATED = 1;
+  MODIFIED = 2;
+  DELETED = 3;
+  RENAMED = 4;
+}
+
+// FileChangeResponse is the response to a file change notification
+message FileChangeResponse {
+  bool success = 1;
+  string message = 2;
+  string change_id = 3;
+}
+
+// DeviceRegistration is used to register a device
+message DeviceRegistration {
+  string device_id = 1;
+  string device_name = 2;
+  string user_id = 3;
+  map<string, string> device_metadata = 4;
+}
+
+// DeviceRegistrationResponse is the response to a device registration
+message DeviceRegistrationResponse {
+  bool success = 1;
+  string message = 2;
+  string token = 3;
+}
+
+// SubscriptionRequest is used to subscribe to changes for a specific folder
+message SubscriptionRequest {
+  string device_id = 1;
+  string folder_id = 2;
+} 

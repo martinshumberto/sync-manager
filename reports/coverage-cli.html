@@ -1,0 +1,1854 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>cmd: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/martinshumberto/sync-manager/cli/cmd/main.go (0.0%)</option>
+				
+				<option value="file1">github.com/martinshumberto/sync-manager/cli/internal/commands/config.go (37.2%)</option>
+				
+				<option value="file2">github.com/martinshumberto/sync-manager/cli/internal/commands/devices.go (63.9%)</option>
+				
+				<option value="file3">github.com/martinshumberto/sync-manager/cli/internal/commands/folder.go (63.5%)</option>
+				
+				<option value="file4">github.com/martinshumberto/sync-manager/cli/internal/commands/init.go (0.0%)</option>
+				
+				<option value="file5">github.com/martinshumberto/sync-manager/cli/internal/commands/monitoring.go (0.0%)</option>
+				
+				<option value="file6">github.com/martinshumberto/sync-manager/cli/internal/commands/sync.go (83.3%)</option>
+				
+				<option value="file7">github.com/martinshumberto/sync-manager/cli/internal/commands/wizard.go (0.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">no coverage</span>
+				<span class="cov1">low coverage</span>
+				<span class="cov2">*</span>
+				<span class="cov3">*</span>
+				<span class="cov4">*</span>
+				<span class="cov5">*</span>
+				<span class="cov6">*</span>
+				<span class="cov7">*</span>
+				<span class="cov8">*</span>
+				<span class="cov9">*</span>
+				<span class="cov10">high coverage</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package main
+
+import (
+        "fmt"
+        "os"
+        "strings"
+
+        "github.com/google/uuid"
+        "github.com/martinshumberto/sync-manager/cli/internal/commands"
+        commonconfig "github.com/martinshumberto/sync-manager/common/config"
+        "github.com/olekukonko/tablewriter"
+        "github.com/rs/zerolog"
+        "github.com/rs/zerolog/log"
+        "github.com/spf13/cobra"
+)
+
+// Version information (will be set during build)
+var (
+        Version   = "dev"
+        BuildTime = "unknown"
+)
+
+func main() <span class="cov0" title="0">{
+        // Initialize logger
+        log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+        zerolog.SetGlobalLevel(zerolog.InfoLevel)
+
+        // Load configuration
+        cfg, configPath, err := loadConfiguration()
+        if err != nil </span><span class="cov0" title="0">{
+                log.Fatal().Err(err).Msg("Failed to load configuration")
+        }</span>
+
+        // Save function to be used by commands
+        <span class="cov0" title="0">saveConfig := func() error </span><span class="cov0" title="0">{
+                return commonconfig.SaveConfig(cfg, configPath)
+        }</span>
+
+        // Define the root command
+        <span class="cov0" title="0">rootCmd := &amp;cobra.Command{
+                Use:     "sync-manager",
+                Short:   "Sync Manager - File synchronization and backup tool",
+                Version: Version,
+                Long: `Sync Manager is a file synchronization and backup tool that allows you to
+securely store and sync your files across multiple devices using S3-compatible storage.
+
+It provides efficient, background synchronization with minimal resource usage.`,
+        }
+
+        // Version command
+        rootCmd.AddCommand(&amp;cobra.Command{
+                Use:   "version",
+                Short: "Print the version information",
+                Run: func(cmd *cobra.Command, args []string) </span><span class="cov0" title="0">{
+                        fmt.Printf("Sync Manager v%s (built %s)\n", Version, BuildTime)
+                }</span>,
+        })
+
+        // Status command
+        <span class="cov0" title="0">statusCmd := &amp;cobra.Command{
+                Use:   "status",
+                Short: "Show sync status of monitored folders",
+                Run: func(cmd *cobra.Command, args []string) </span><span class="cov0" title="0">{
+                        if len(cfg.SyncFolders) == 0 </span><span class="cov0" title="0">{
+                                fmt.Println("No folders configured for synchronization.")
+                                return
+                        }</span>
+
+                        // TODO: In a real implementation, we would connect to the agent
+                        // and get the actual status. For now, just show config info.
+                        <span class="cov0" title="0">fmt.Println("Synchronization Status:")
+                        fmt.Println("----------------------")
+
+                        table := tablewriter.NewWriter(os.Stdout)
+                        table.SetHeader([]string{"Path", "Status", "Last Sync"})
+
+                        for _, folder := range cfg.SyncFolders </span><span class="cov0" title="0">{
+                                status := "Enabled"
+                                if !folder.Enabled </span><span class="cov0" title="0">{
+                                        status = "Disabled"
+                                }</span>
+
+                                <span class="cov0" title="0">table.Append([]string{
+                                        folder.Path,
+                                        status,
+                                        "Unknown", // We don't have actual sync status yet
+                                })</span>
+                        }
+                        <span class="cov0" title="0">table.Render()</span>
+                },
+        }
+        <span class="cov0" title="0">rootCmd.AddCommand(statusCmd)
+
+        // Start command - starts the agent
+        startCmd := &amp;cobra.Command{
+                Use:   "start",
+                Short: "Start the sync agent",
+                RunE: func(cmd *cobra.Command, args []string) error </span><span class="cov0" title="0">{
+                        return startAgent()
+                }</span>,
+        }
+        <span class="cov0" title="0">rootCmd.AddCommand(startCmd)
+
+        // Stop command - stops the agent
+        stopCmd := &amp;cobra.Command{
+                Use:   "stop",
+                Short: "Stop the sync agent",
+                RunE: func(cmd *cobra.Command, args []string) error </span><span class="cov0" title="0">{
+                        return stopAgent()
+                }</span>,
+        }
+        <span class="cov0" title="0">rootCmd.AddCommand(stopCmd)
+
+        // Add folder management commands
+        folderCommands := commands.CreateFolderCommands(cfg, saveConfig)
+        for _, cmd := range folderCommands </span><span class="cov0" title="0">{
+                rootCmd.AddCommand(cmd)
+        }</span>
+
+        // Add configuration commands
+        <span class="cov0" title="0">configCommands := commands.CreateConfigCommands(cfg, saveConfig)
+        for _, cmd := range configCommands </span><span class="cov0" title="0">{
+                rootCmd.AddCommand(cmd)
+        }</span>
+
+        // Add sync commands
+        <span class="cov0" title="0">syncCommands := commands.CreateSyncCommands(cfg)
+        for _, cmd := range syncCommands </span><span class="cov0" title="0">{
+                rootCmd.AddCommand(cmd)
+        }</span>
+
+        // Add monitoring commands
+        <span class="cov0" title="0">monitoringCommands := commands.CreateMonitoringCommands(cfg)
+        for _, cmd := range monitoringCommands </span><span class="cov0" title="0">{
+                rootCmd.AddCommand(cmd)
+        }</span>
+
+        // Add device commands
+        <span class="cov0" title="0">deviceCommands := commands.CreateDeviceCommands(cfg)
+        for _, cmd := range deviceCommands </span><span class="cov0" title="0">{
+                rootCmd.AddCommand(cmd)
+        }</span>
+
+        // Add init command
+        <span class="cov0" title="0">initCmd := commands.CreateInitCommand(cfg, saveConfig)
+        rootCmd.AddCommand(initCmd)
+
+        // Add wizard command
+        wizardCmd := commands.CreateWizardCommand(cfg, saveConfig)
+        rootCmd.AddCommand(wizardCmd)
+
+        // Execute the command
+        if err := rootCmd.Execute(); err != nil </span><span class="cov0" title="0">{
+                fmt.Println(err)
+                os.Exit(1)
+        }</span>
+}
+
+// loadConfiguration loads the configuration or creates a default one
+func loadConfiguration() (*commonconfig.Config, string, error) <span class="cov0" title="0">{
+        // Look for configuration in common places
+        configPath := ""
+
+        // Check for config path in environment variable
+        if envPath := os.Getenv("SYNC_MANAGER_CONFIG"); envPath != "" </span><span class="cov0" title="0">{
+                configPath = envPath
+        }</span>
+
+        // Try to load the configuration
+        <span class="cov0" title="0">cfg, err := commonconfig.LoadConfig(configPath)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, "", fmt.Errorf("failed to load config: %w", err)
+        }</span>
+
+        // If no config path was specified and none was found, get the default path
+        <span class="cov0" title="0">if configPath == "" </span><span class="cov0" title="0">{
+                configPath, err = commonconfig.GetConfigPath()
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, "", fmt.Errorf("failed to get default config path: %w", err)
+                }</span>
+        }
+
+        // If device ID is not set, generate one
+        <span class="cov0" title="0">if cfg.DeviceID == "" </span><span class="cov0" title="0">{
+                cfg.DeviceID = uuid.New().String()
+
+                // Try to set a default device name
+                if cfg.DeviceName == "" </span><span class="cov0" title="0">{
+                        hostname, err := os.Hostname()
+                        if err == nil </span><span class="cov0" title="0">{
+                                cfg.DeviceName = hostname
+                        }</span> else<span class="cov0" title="0"> {
+                                cfg.DeviceName = "sync-manager-device"
+                        }</span>
+                }
+
+                // Save the configuration
+                <span class="cov0" title="0">if err := commonconfig.SaveConfig(cfg, configPath); err != nil </span><span class="cov0" title="0">{
+                        log.Warn().Err(err).Msg("Failed to save configuration")
+                }</span>
+        }
+
+        <span class="cov0" title="0">return cfg, configPath, nil</span>
+}
+
+// startAgent starts the sync agent
+func startAgent() error <span class="cov0" title="0">{
+        // In a real implementation, we would use a proper method to start the agent
+        // such as systemd, launchd, or a service manager.
+        // For now, just simulate starting the agent.
+
+        fmt.Println("Starting Sync Manager agent...")
+
+        // For demo purposes, we'll just print a message
+        // In a real implementation, we would:
+        // 1. Check if the agent is already running
+        // 2. Start the agent as a background service
+        // 3. Wait for it to initialize
+
+        fmt.Println("Agent started in the background.")
+        return nil
+}</span>
+
+// stopAgent stops the sync agent
+func stopAgent() error <span class="cov0" title="0">{
+        // In a real implementation, we would use a proper method to stop the agent
+        // For now, just simulate stopping the agent.
+
+        fmt.Println("Stopping Sync Manager agent...")
+
+        // For demo purposes, we'll just print a message
+        // In a real implementation, we would:
+        // 1. Check if the agent is running
+        // 2. Send a signal to stop it gracefully
+        // 3. Wait for it to shut down
+
+        fmt.Println("Agent stopped.")
+        return nil
+}</span>
+
+// readLine reads a line from stdin
+func readLine() string <span class="cov0" title="0">{
+        var input string
+        fmt.Scanln(&amp;input)
+        return strings.TrimSpace(input)
+}</span>
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package commands
+
+import (
+        "fmt"
+        "strconv"
+
+        "github.com/martinshumberto/sync-manager/common/config"
+        "github.com/spf13/cobra"
+)
+
+// CreateConfigCommands returns the configuration-related commands
+func CreateConfigCommands(cfg *config.Config, saveFn func() error) []*cobra.Command <span class="cov10" title="4">{
+        // Config root command
+        configCmd := &amp;cobra.Command{
+                Use:   "config",
+                Short: "Manage application configuration",
+                Long:  `View and modify application configuration settings.`,
+        }
+
+        // Config get command
+        configGetCmd := &amp;cobra.Command{
+                Use:   "get [key]",
+                Short: "Display current configuration",
+                Long:  `Display the current configuration. If a key is provided, only that setting is shown.`,
+                RunE: func(cmd *cobra.Command, args []string) error </span><span class="cov1" title="1">{
+                        if len(args) &gt; 0 </span><span class="cov1" title="1">{
+                                key := args[0]
+                                // TODO: Implement fetching specific configuration values
+                                switch key </span>{
+                                case "storage.provider":<span class="cov1" title="1">
+                                        fmt.Printf("%s: %s\n", key, cfg.StorageProvider)</span>
+                                case "storage.s3.bucket":<span class="cov0" title="0">
+                                        fmt.Printf("%s: %s\n", key, cfg.S3Config.Bucket)</span>
+                                case "storage.minio.bucket":<span class="cov0" title="0">
+                                        fmt.Printf("%s: %s\n", key, cfg.MinioConfig.Bucket)</span>
+                                case "storage.minio.endpoint":<span class="cov0" title="0">
+                                        fmt.Printf("%s: %s\n", key, cfg.MinioConfig.Endpoint)</span>
+                                case "storage.gcs.bucket":<span class="cov0" title="0">
+                                        fmt.Printf("%s: %s\n", key, cfg.GCSConfig.Bucket)</span>
+                                case "storage.local.root_dir":<span class="cov0" title="0">
+                                        fmt.Printf("%s: %s\n", key, cfg.LocalConfig.RootDir)</span>
+                                case "throttle.bandwidth":<span class="cov0" title="0">
+                                        fmt.Printf("%s: %d bytes/sec\n", key, cfg.ThrottleBytes)</span>
+                                default:<span class="cov0" title="0">
+                                        fmt.Printf("Unknown configuration key: %s\n", key)</span>
+                                }
+                                <span class="cov1" title="1">return nil</span>
+                        }
+
+                        // Display entire configuration
+                        <span class="cov0" title="0">DisplayConfig(cfg)
+                        return nil</span>
+                },
+        }
+
+        // Config set command
+        <span class="cov10" title="4">configSetCmd := &amp;cobra.Command{
+                Use:   "set &lt;key&gt; &lt;value&gt;",
+                Short: "Set configuration value",
+                Long:  `Set a specific configuration value.`,
+                Args:  cobra.ExactArgs(2),
+                RunE: func(cmd *cobra.Command, args []string) error </span><span class="cov1" title="1">{
+                        key := args[0]
+                        value := args[1]
+
+                        // Set the appropriate configuration
+                        switch key </span>{
+                        case "storage.provider":<span class="cov1" title="1">
+                                // Verificar se o provedor é suportado
+                                switch value </span>{
+                                case "s3", "minio", "gcs", "local":<span class="cov1" title="1">
+                                        cfg.StorageProvider = value</span>
+                                default:<span class="cov0" title="0">
+                                        return fmt.Errorf("unsupported storage provider: %s (supported: s3, minio, gcs, local)", value)</span>
+                                }
+                        case "storage.s3.bucket":<span class="cov0" title="0">
+                                cfg.S3Config.Bucket = value</span>
+                        case "storage.s3.region":<span class="cov0" title="0">
+                                cfg.S3Config.Region = value</span>
+                        case "storage.s3.endpoint":<span class="cov0" title="0">
+                                cfg.S3Config.Endpoint = value</span>
+                        case "storage.s3.access_key":<span class="cov0" title="0">
+                                cfg.S3Config.AccessKey = value</span>
+                        case "storage.s3.secret_key":<span class="cov0" title="0">
+                                cfg.S3Config.SecretKey = value</span>
+                        case "storage.minio.bucket":<span class="cov0" title="0">
+                                cfg.MinioConfig.Bucket = value</span>
+                        case "storage.minio.endpoint":<span class="cov0" title="0">
+                                cfg.MinioConfig.Endpoint = value</span>
+                        case "storage.minio.region":<span class="cov0" title="0">
+                                cfg.MinioConfig.Region = value</span>
+                        case "storage.minio.access_key":<span class="cov0" title="0">
+                                cfg.MinioConfig.AccessKey = value</span>
+                        case "storage.minio.secret_key":<span class="cov0" title="0">
+                                cfg.MinioConfig.SecretKey = value</span>
+                        case "storage.gcs.bucket":<span class="cov0" title="0">
+                                cfg.GCSConfig.Bucket = value</span>
+                        case "storage.gcs.project_id":<span class="cov0" title="0">
+                                cfg.GCSConfig.ProjectID = value</span>
+                        case "storage.gcs.credentials_file":<span class="cov0" title="0">
+                                cfg.GCSConfig.CredentialsFile = value</span>
+                        case "storage.local.root_dir":<span class="cov0" title="0">
+                                cfg.LocalConfig.RootDir = value</span>
+                        case "throttle.bandwidth":<span class="cov0" title="0">
+                                // This would need proper parsing for a number
+                                bandwidth, err := strconv.ParseInt(value, 10, 64)
+                                if err != nil </span><span class="cov0" title="0">{
+                                        return fmt.Errorf("invalid bandwidth value: %s (must be a number)", value)
+                                }</span>
+                                <span class="cov0" title="0">cfg.ThrottleBytes = bandwidth</span>
+                        default:<span class="cov0" title="0">
+                                return fmt.Errorf("unknown configuration key: %s", key)</span>
+                        }
+
+                        // Save the configuration
+                        <span class="cov1" title="1">if err := saveFn(); err != nil </span><span class="cov0" title="0">{
+                                return fmt.Errorf("failed to save configuration: %w", err)
+                        }</span>
+
+                        <span class="cov1" title="1">fmt.Printf("Configuration %s set to %s\n", key, value)
+                        return nil</span>
+                },
+        }
+
+        // Config reset command
+        <span class="cov10" title="4">configResetCmd := &amp;cobra.Command{
+                Use:   "reset",
+                Short: "Reset configuration to defaults",
+                Long:  `Reset all configuration settings to their default values.`,
+                RunE: func(cmd *cobra.Command, args []string) error </span><span class="cov0" title="0">{
+                        // Ask for confirmation
+                        fmt.Print("This will reset all configuration to default values. Continue? (y/n): ")
+                        var response string
+                        fmt.Scanln(&amp;response)
+                        if response != "y" &amp;&amp; response != "Y" </span><span class="cov0" title="0">{
+                                fmt.Println("Operation cancelled.")
+                                return nil
+                        }</span>
+
+                        // Create a default configuration but keep the device ID
+                        <span class="cov0" title="0">deviceID := cfg.DeviceID
+                        deviceName := cfg.DeviceName
+                        *cfg = *config.DefaultConfig()
+                        cfg.DeviceID = deviceID
+                        cfg.DeviceName = deviceName
+
+                        // Save the configuration
+                        if err := saveFn(); err != nil </span><span class="cov0" title="0">{
+                                return fmt.Errorf("failed to save configuration: %w", err)
+                        }</span>
+
+                        <span class="cov0" title="0">fmt.Println("Configuration reset to default values.")
+                        return nil</span>
+                },
+        }
+
+        // Add subcommands to config command
+        <span class="cov10" title="4">configCmd.AddCommand(configGetCmd)
+        configCmd.AddCommand(configSetCmd)
+        configCmd.AddCommand(configResetCmd)
+
+        return []*cobra.Command{configCmd}</span>
+}
+
+// DisplayConfig imprime a configuração atual
+func DisplayConfig(cfg *config.Config) <span class="cov1" title="1">{
+        fmt.Println("Current Configuration:")
+        fmt.Println("---------------------")
+        fmt.Printf("Device ID: %s\n", cfg.DeviceID)
+        fmt.Printf("Device Name: %s\n", cfg.DeviceName)
+        fmt.Printf("Storage Provider: %s\n", cfg.StorageProvider)
+
+        // Exibir detalhes específicos de acordo com o provedor de armazenamento
+        switch cfg.StorageProvider </span>{
+        case "s3":<span class="cov0" title="0">
+                fmt.Println("\nS3 Storage Configuration:")
+                fmt.Printf("  Bucket: %s\n", cfg.S3Config.Bucket)
+                fmt.Printf("  Region: %s\n", cfg.S3Config.Region)
+                if cfg.S3Config.Endpoint != "" </span><span class="cov0" title="0">{
+                        fmt.Printf("  Endpoint: %s\n", cfg.S3Config.Endpoint)
+                }</span>
+                <span class="cov0" title="0">fmt.Printf("  Path Style: %v\n", cfg.S3Config.PathStyle)
+                fmt.Printf("  Use SSL: %v\n", cfg.S3Config.UseSSL)</span>
+        case "minio":<span class="cov1" title="1">
+                fmt.Println("\nMinIO Storage Configuration:")
+                fmt.Printf("  Endpoint: %s\n", cfg.MinioConfig.Endpoint)
+                fmt.Printf("  Bucket: %s\n", cfg.MinioConfig.Bucket)
+                fmt.Printf("  Region: %s\n", cfg.MinioConfig.Region)
+                fmt.Printf("  Use SSL: %v\n", cfg.MinioConfig.UseSSL)</span>
+        case "gcs":<span class="cov0" title="0">
+                fmt.Println("\nGoogle Cloud Storage Configuration:")
+                fmt.Printf("  Project ID: %s\n", cfg.GCSConfig.ProjectID)
+                fmt.Printf("  Bucket: %s\n", cfg.GCSConfig.Bucket)
+                if cfg.GCSConfig.CredentialsFile != "" </span><span class="cov0" title="0">{
+                        fmt.Printf("  Credentials File: %s\n", cfg.GCSConfig.CredentialsFile)
+                }</span>
+        case "local":<span class="cov0" title="0">
+                fmt.Println("\nLocal Storage Configuration:")
+                fmt.Printf("  Root Directory: %s\n", cfg.LocalConfig.RootDir)</span>
+        }
+
+        <span class="cov1" title="1">fmt.Printf("\nMax Concurrency: %d\n", cfg.MaxConcurrency)
+        fmt.Printf("Throttle Bandwidth: %d bytes/sec\n", cfg.ThrottleBytes)
+        fmt.Printf("Sync Interval: %s\n", cfg.SyncInterval.String())</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package commands
+
+import (
+        "fmt"
+        "os"
+        "time"
+
+        "github.com/martinshumberto/sync-manager/common/config"
+        "github.com/olekukonko/tablewriter"
+        "github.com/spf13/cobra"
+)
+
+// CreateDeviceCommands returns the device management commands
+func CreateDeviceCommands(cfg *config.Config) []*cobra.Command <span class="cov10" title="5">{
+        // Devices root command
+        devicesCmd := &amp;cobra.Command{
+                Use:   "devices",
+                Short: "Manage connected devices",
+                Long:  `View and manage devices connected to your account.`,
+        }
+
+        // Devices list command
+        listCmd := &amp;cobra.Command{
+                Use:   "list",
+                Short: "List connected devices",
+                Long:  `Display a list of all devices connected to your account.`,
+                RunE: func(cmd *cobra.Command, args []string) error </span><span class="cov1" title="1">{
+                        fmt.Println("Connected Devices:")
+                        fmt.Println("-----------------")
+
+                        // In a real implementation, we would fetch this from the server
+                        // For now, we'll just display simulated data
+                        table := tablewriter.NewWriter(os.Stdout)
+                        table.SetHeader([]string{"Device ID", "Name", "Last Seen", "Status"})
+
+                        // Current device
+                        table.Append([]string{
+                                cfg.DeviceID,
+                                cfg.DeviceName + " (this device)",
+                                "Now",
+                                "Online",
+                        })
+
+                        // Simulated other devices
+                        table.Append([]string{
+                                "d8f3a1c2-5b6e-7d8f-9a0b-1c2d3e4f5a6b",
+                                "John's Laptop",
+                                "2 hours ago",
+                                "Offline",
+                        })
+
+                        table.Append([]string{
+                                "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+                                "Office Desktop",
+                                "12 minutes ago",
+                                "Online",
+                        })
+
+                        table.Render()
+                        return nil
+                }</span>,
+        }
+
+        // Devices unlink command
+        <span class="cov10" title="5">unlinkCmd := &amp;cobra.Command{
+                Use:   "unlink &lt;device-id&gt;",
+                Short: "Unlink a device from your account",
+                Long:  `Remove the connection between a device and your account.`,
+                Args:  cobra.ExactArgs(1),
+                RunE: func(cmd *cobra.Command, args []string) error </span><span class="cov1" title="1">{
+                        deviceID := args[0]
+
+                        // Check if trying to unlink current device
+                        if deviceID == cfg.DeviceID </span><span class="cov1" title="1">{
+                                return fmt.Errorf("cannot unlink the current device. Use 'reset' command instead if you want to reconfigure this device")
+                        }</span>
+
+                        // Ask for confirmation
+                        <span class="cov0" title="0">fmt.Printf("Are you sure you want to unlink device %s? (y/n): ", deviceID)
+                        var response string
+                        fmt.Scanln(&amp;response)
+
+                        if response != "y" &amp;&amp; response != "Y" </span><span class="cov0" title="0">{
+                                fmt.Println("Operation cancelled.")
+                                return nil
+                        }</span>
+
+                        <span class="cov0" title="0">fmt.Printf("Unlinking device %s...\n", deviceID)
+
+                        // In a real implementation, we would:
+                        // 1. Connect to the server
+                        // 2. Remove the device authorization
+                        // 3. Handle any cleanup
+
+                        // Simulate processing
+                        time.Sleep(1 * time.Second)
+
+                        fmt.Println("Device successfully unlinked.")
+                        fmt.Println("This device will no longer be able to access your account or synchronize files.")
+
+                        return nil</span>
+                },
+        }
+
+        // Devices rename command (for current device)
+        <span class="cov10" title="5">renameCmd := &amp;cobra.Command{
+                Use:   "rename &lt;new-name&gt;",
+                Short: "Rename this device",
+                Long:  `Change the name of the current device.`,
+                Args:  cobra.ExactArgs(1),
+                RunE: func(cmd *cobra.Command, args []string) error </span><span class="cov1" title="1">{
+                        newName := args[0]
+                        oldName := cfg.DeviceName
+
+                        // Validate name
+                        if newName == "" </span><span class="cov0" title="0">{
+                                return fmt.Errorf("device name cannot be empty")
+                        }</span>
+
+                        // Update the device name
+                        <span class="cov1" title="1">cfg.DeviceName = newName
+
+                        // In a real implementation, we would also:
+                        // 1. Connect to the server
+                        // 2. Update the device name in the remote database
+                        // 3. Sync the changes to other devices
+
+                        fmt.Printf("Device renamed from '%s' to '%s'.\n", oldName, newName)
+
+                        // Return the updated config to be saved
+                        return nil</span>
+                },
+        }
+
+        // Devices info command
+        <span class="cov10" title="5">infoCmd := &amp;cobra.Command{
+                Use:   "info [device-id]",
+                Short: "Show detailed information about a device",
+                Long:  `Display detailed information about a specific device or the current device if no ID is provided.`,
+                Args:  cobra.MaximumNArgs(1),
+                RunE: func(cmd *cobra.Command, args []string) error </span><span class="cov1" title="1">{
+                        var deviceID string
+                        var isCurrentDevice bool
+
+                        // If no device ID is provided, use the current device
+                        if len(args) == 0 </span><span class="cov1" title="1">{
+                                deviceID = cfg.DeviceID
+                                isCurrentDevice = true
+                        }</span> else<span class="cov0" title="0"> {
+                                deviceID = args[0]
+                                isCurrentDevice = (deviceID == cfg.DeviceID)
+                        }</span>
+
+                        // In a real implementation, we would fetch device details from the server
+                        // For now, we'll display information for the current device and simulated data for others
+
+                        <span class="cov1" title="1">fmt.Println("Device Information:")
+                        fmt.Println("------------------")
+
+                        if isCurrentDevice </span><span class="cov1" title="1">{
+                                fmt.Printf("Device ID:      %s\n", cfg.DeviceID)
+                                fmt.Printf("Name:           %s (this device)\n", cfg.DeviceName)
+                                fmt.Printf("Status:         Online\n")
+                                fmt.Printf("Last Seen:      Now\n")
+                                fmt.Printf("Storage:        %s\n", cfg.StorageProvider)
+                                fmt.Printf("Sync Interval:  %s\n", cfg.SyncInterval)
+                                fmt.Printf("Sync Folders:   %d\n", len(cfg.SyncFolders))
+
+                                // Display synced folders
+                                if len(cfg.SyncFolders) &gt; 0 </span><span class="cov1" title="1">{
+                                        fmt.Println("\nSynced Folders:")
+                                        table := tablewriter.NewWriter(os.Stdout)
+                                        table.SetHeader([]string{"ID", "Path", "Status"})
+
+                                        for _, folder := range cfg.SyncFolders </span><span class="cov1" title="1">{
+                                                status := "Enabled"
+                                                if !folder.Enabled </span><span class="cov0" title="0">{
+                                                        status = "Disabled"
+                                                }</span>
+
+                                                <span class="cov1" title="1">table.Append([]string{
+                                                        folder.ID,
+                                                        folder.Path,
+                                                        status,
+                                                })</span>
+                                        }
+
+                                        <span class="cov1" title="1">table.Render()</span>
+                                }
+                        } else<span class="cov0" title="0"> if deviceID == "d8f3a1c2-5b6e-7d8f-9a0b-1c2d3e4f5a6b" </span><span class="cov0" title="0">{
+                                // Simulated device 1
+                                fmt.Printf("Device ID:      %s\n", deviceID)
+                                fmt.Printf("Name:           %s\n", "John's Laptop")
+                                fmt.Printf("Status:         Offline\n")
+                                fmt.Printf("Last Seen:      2 hours ago\n")
+                                fmt.Printf("Storage:        minio\n")
+                                fmt.Printf("Sync Folders:   2\n")
+                        }</span> else<span class="cov0" title="0"> if deviceID == "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d" </span><span class="cov0" title="0">{
+                                // Simulated device 2
+                                fmt.Printf("Device ID:      %s\n", deviceID)
+                                fmt.Printf("Name:           %s\n", "Office Desktop")
+                                fmt.Printf("Status:         Online\n")
+                                fmt.Printf("Last Seen:      12 minutes ago\n")
+                                fmt.Printf("Storage:        minio\n")
+                                fmt.Printf("Sync Folders:   3\n")
+                        }</span> else<span class="cov0" title="0"> {
+                                return fmt.Errorf("device with ID %s not found", deviceID)
+                        }</span>
+
+                        <span class="cov1" title="1">return nil</span>
+                },
+        }
+
+        // Add subcommands to devices command
+        <span class="cov10" title="5">devicesCmd.AddCommand(listCmd)
+        devicesCmd.AddCommand(unlinkCmd)
+        devicesCmd.AddCommand(renameCmd)
+        devicesCmd.AddCommand(infoCmd)
+
+        return []*cobra.Command{devicesCmd}</span>
+}
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package commands
+
+import (
+        "fmt"
+        "os"
+        "path/filepath"
+        "strings"
+
+        "github.com/google/uuid"
+        "github.com/martinshumberto/sync-manager/common/config"
+        "github.com/olekukonko/tablewriter"
+        "github.com/spf13/cobra"
+)
+
+// CreateFolderCommands returns the folder-related commands
+func CreateFolderCommands(cfg *config.Config, saveFn func() error) []*cobra.Command <span class="cov10" title="6">{
+        addFolderCmd := &amp;cobra.Command{
+                Use:   "add-folder [path]",
+                Short: "Add a folder to sync",
+                Args:  cobra.ExactArgs(1),
+                RunE: func(cmd *cobra.Command, args []string) error </span><span class="cov0" title="0">{
+                        path := args[0]
+
+                        // Check if the folder exists
+                        info, err := os.Stat(path)
+                        if err != nil </span><span class="cov0" title="0">{
+                                return fmt.Errorf("cannot access folder %s: %w", path, err)
+                        }</span>
+                        <span class="cov0" title="0">if !info.IsDir() </span><span class="cov0" title="0">{
+                                return fmt.Errorf("%s is not a directory", path)
+                        }</span>
+
+                        // Get absolute path
+                        <span class="cov0" title="0">absPath, err := filepath.Abs(path)
+                        if err != nil </span><span class="cov0" title="0">{
+                                return fmt.Errorf("failed to get absolute path: %w", err)
+                        }</span>
+
+                        // Check if folder is already being synced
+                        <span class="cov0" title="0">for _, folder := range cfg.SyncFolders </span><span class="cov0" title="0">{
+                                existingPath, err := filepath.Abs(folder.Path)
+                                if err == nil &amp;&amp; existingPath == absPath </span><span class="cov0" title="0">{
+                                        return fmt.Errorf("folder %s is already being synced (ID: %s)", path, folder.ID)
+                                }</span>
+                        }
+
+                        // Get flags
+                        <span class="cov0" title="0">name, _ := cmd.Flags().GetString("name")
+                        excludePatterns, _ := cmd.Flags().GetStringSlice("exclude")
+                        twoWay, _ := cmd.Flags().GetBool("two-way")
+
+                        // If name is empty, use the base directory name
+                        if name == "" </span><span class="cov0" title="0">{
+                                name = filepath.Base(absPath)
+                        }</span>
+
+                        // Generate a unique ID for the folder
+                        <span class="cov0" title="0">folderID := uuid.New().String()
+
+                        // Create the sync folder
+                        folder := config.SyncFolder{
+                                ID:         folderID,
+                                Path:       absPath,
+                                Enabled:    true,
+                                Exclude:    excludePatterns,
+                                Priority:   10,
+                                TwoWaySync: twoWay,
+                        }
+
+                        // Add it to the configuration
+                        cfg.SyncFolders = append(cfg.SyncFolders, folder)
+
+                        // Save the configuration
+                        if err := saveFn(); err != nil </span><span class="cov0" title="0">{
+                                return fmt.Errorf("failed to save configuration: %w", err)
+                        }</span>
+
+                        <span class="cov0" title="0">fmt.Printf("Added folder: %s\n", absPath)
+                        fmt.Printf("Folder ID: %s\n", folderID)
+                        fmt.Println("Sync will start automatically when the agent is running.")
+
+                        return nil</span>
+                },
+        }
+
+        // Add flags to add-folder command
+        <span class="cov10" title="6">addFolderCmd.Flags().String("name", "", "Name for the synced folder (default: directory name)")
+        addFolderCmd.Flags().StringSlice("exclude", nil, "Patterns to exclude (e.g. '*.tmp,*.bak')")
+        addFolderCmd.Flags().Bool("two-way", false, "Enable two-way sync (download changes from cloud)")
+
+        // List folders command
+        listFoldersCmd := &amp;cobra.Command{
+                Use:   "list-folders",
+                Short: "List all synchronized folders",
+                RunE: func(cmd *cobra.Command, args []string) error </span><span class="cov1" title="1">{
+                        if len(cfg.SyncFolders) == 0 </span><span class="cov0" title="0">{
+                                fmt.Println("No folders configured for synchronization.")
+                                return nil
+                        }</span>
+
+                        // Print as a table
+                        <span class="cov1" title="1">table := tablewriter.NewWriter(os.Stdout)
+                        table.SetHeader([]string{"ID", "Path", "Status", "Exclude Patterns"})
+
+                        for _, folder := range cfg.SyncFolders </span><span class="cov4" title="2">{
+                                status := "Enabled"
+                                if !folder.Enabled </span><span class="cov1" title="1">{
+                                        status = "Disabled"
+                                }</span>
+                                <span class="cov4" title="2">excludes := "-"
+                                if len(folder.Exclude) &gt; 0 </span><span class="cov4" title="2">{
+                                        excludes = strings.Join(folder.Exclude, ", ")
+                                }</span>
+                                <span class="cov4" title="2">table.Append([]string{
+                                        folder.ID,
+                                        folder.Path,
+                                        status,
+                                        excludes,
+                                })</span>
+                        }
+                        <span class="cov1" title="1">table.Render()
+
+                        return nil</span>
+                },
+        }
+
+        // Remove folder command
+        <span class="cov10" title="6">removeFolderCmd := &amp;cobra.Command{
+                Use:   "remove-folder [folder-id]",
+                Short: "Remove a folder from synchronization",
+                Args:  cobra.ExactArgs(1),
+                RunE: func(cmd *cobra.Command, args []string) error </span><span class="cov1" title="1">{
+                        folderID := args[0]
+
+                        // Find the folder
+                        var folderPath string
+                        var folderIndex = -1
+                        for i, folder := range cfg.SyncFolders </span><span class="cov1" title="1">{
+                                if folder.ID == folderID </span><span class="cov1" title="1">{
+                                        folderPath = folder.Path
+                                        folderIndex = i
+                                        break</span>
+                                }
+                        }
+
+                        <span class="cov1" title="1">if folderIndex == -1 </span><span class="cov0" title="0">{
+                                return fmt.Errorf("folder with ID %s not found", folderID)
+                        }</span>
+
+                        // Remove the folder from config
+                        <span class="cov1" title="1">cfg.SyncFolders = append(cfg.SyncFolders[:folderIndex], cfg.SyncFolders[folderIndex+1:]...)
+
+                        // Save the configuration
+                        if err := saveFn(); err != nil </span><span class="cov0" title="0">{
+                                return fmt.Errorf("failed to save configuration: %w", err)
+                        }</span>
+
+                        <span class="cov1" title="1">fmt.Printf("Removed folder: %s (ID: %s)\n", folderPath, folderID)
+                        return nil</span>
+                },
+        }
+
+        // Enable folder command
+        <span class="cov10" title="6">enableFolderCmd := &amp;cobra.Command{
+                Use:   "enable-folder [folder-id]",
+                Short: "Enable synchronization for a folder",
+                Args:  cobra.ExactArgs(1),
+                RunE: func(cmd *cobra.Command, args []string) error </span><span class="cov1" title="1">{
+                        folderID := args[0]
+
+                        // Find the folder
+                        var folderPath string
+                        found := false
+                        for i := range cfg.SyncFolders </span><span class="cov1" title="1">{
+                                if cfg.SyncFolders[i].ID == folderID </span><span class="cov1" title="1">{
+                                        folderPath = cfg.SyncFolders[i].Path
+                                        cfg.SyncFolders[i].Enabled = true
+                                        found = true
+                                        break</span>
+                                }
+                        }
+
+                        <span class="cov1" title="1">if !found </span><span class="cov0" title="0">{
+                                return fmt.Errorf("folder with ID %s not found", folderID)
+                        }</span>
+
+                        // Save the configuration
+                        <span class="cov1" title="1">if err := saveFn(); err != nil </span><span class="cov0" title="0">{
+                                return fmt.Errorf("failed to save configuration: %w", err)
+                        }</span>
+
+                        <span class="cov1" title="1">fmt.Printf("Enabled synchronization for folder: %s (ID: %s)\n", folderPath, folderID)
+                        return nil</span>
+                },
+        }
+
+        // Disable folder command
+        <span class="cov10" title="6">disableFolderCmd := &amp;cobra.Command{
+                Use:   "disable-folder [folder-id]",
+                Short: "Disable synchronization for a folder",
+                Args:  cobra.ExactArgs(1),
+                RunE: func(cmd *cobra.Command, args []string) error </span><span class="cov1" title="1">{
+                        folderID := args[0]
+
+                        // Find the folder
+                        var folderPath string
+                        found := false
+                        for i := range cfg.SyncFolders </span><span class="cov1" title="1">{
+                                if cfg.SyncFolders[i].ID == folderID </span><span class="cov1" title="1">{
+                                        folderPath = cfg.SyncFolders[i].Path
+                                        cfg.SyncFolders[i].Enabled = false
+                                        found = true
+                                        break</span>
+                                }
+                        }
+
+                        <span class="cov1" title="1">if !found </span><span class="cov0" title="0">{
+                                return fmt.Errorf("folder with ID %s not found", folderID)
+                        }</span>
+
+                        // Save the configuration
+                        <span class="cov1" title="1">if err := saveFn(); err != nil </span><span class="cov0" title="0">{
+                                return fmt.Errorf("failed to save configuration: %w", err)
+                        }</span>
+
+                        <span class="cov1" title="1">fmt.Printf("Disabled synchronization for folder: %s (ID: %s)\n", folderPath, folderID)
+                        return nil</span>
+                },
+        }
+
+        <span class="cov10" title="6">return []*cobra.Command{
+                addFolderCmd,
+                listFoldersCmd,
+                removeFolderCmd,
+                enableFolderCmd,
+                disableFolderCmd,
+        }</span>
+}
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package commands
+
+import (
+        "fmt"
+        "os"
+        "path/filepath"
+
+        "github.com/martinshumberto/sync-manager/common/config"
+        "github.com/spf13/cobra"
+)
+
+// CreateInitCommand returns the initialization command
+func CreateInitCommand(cfg *config.Config, saveFn func() error) *cobra.Command <span class="cov0" title="0">{
+        // Init command - simple initialization
+        initCmd := &amp;cobra.Command{
+                Use:   "init",
+                Short: "Initialize sync-manager configuration",
+                Long:  `Initialize the basic configuration for sync-manager.`,
+                RunE: func(cmd *cobra.Command, args []string) error </span><span class="cov0" title="0">{
+                        fmt.Println("Initializing sync-manager...")
+
+                        // Check if configuration looks initialized already
+                        if cfg.DeviceID != "" &amp;&amp; cfg.StorageProvider != "" &amp;&amp; cfg.S3Config.Bucket != "" </span><span class="cov0" title="0">{
+                                fmt.Println("Configuration appears to be already initialized.")
+                                fmt.Println("Use 'sync-manager config' commands to modify settings or 'sync-manager wizard' for a guided setup.")
+                                fmt.Println("To reset the configuration, use 'sync-manager config reset'.")
+                                return nil
+                        }</span>
+
+                        // Basic configuration
+                        <span class="cov0" title="0">fmt.Println("Setting up basic configuration...")
+
+                        // Keep device ID and name if already set
+                        if cfg.DeviceID == "" || cfg.DeviceName == "" </span><span class="cov0" title="0">{
+                                fmt.Println("Device not yet registered, generating device ID...")
+                                // DeviceID is already generated in main.go, we just need to inform the user
+                        }</span>
+
+                        // Set basic defaults
+                        <span class="cov0" title="0">if cfg.StorageProvider == "" </span><span class="cov0" title="0">{
+                                cfg.StorageProvider = "s3"
+                        }</span>
+
+                        <span class="cov0" title="0">if cfg.S3Config.Region == "" </span><span class="cov0" title="0">{
+                                cfg.S3Config.Region = "us-east-1"
+                        }</span>
+
+                        <span class="cov0" title="0">if cfg.MaxConcurrency == 0 </span><span class="cov0" title="0">{
+                                cfg.MaxConcurrency = 4
+                        }</span>
+
+                        // Ask for S3 bucket if not set
+                        <span class="cov0" title="0">if cfg.S3Config.Bucket == "" </span><span class="cov0" title="0">{
+                                fmt.Print("Enter S3 bucket name (or press Enter to configure later): ")
+                                var bucket string
+                                fmt.Scanln(&amp;bucket)
+
+                                if bucket != "" </span><span class="cov0" title="0">{
+                                        cfg.S3Config.Bucket = bucket
+                                }</span> else<span class="cov0" title="0"> {
+                                        fmt.Println("No bucket specified. You can configure it later with 'sync-manager config set storage.s3.bucket &lt;name&gt;'.")
+                                }</span>
+                        }
+
+                        // Create default sync directory if desired
+                        <span class="cov0" title="0">fmt.Print("Create a default sync folder in your home directory? [Y/n]: ")
+                        var createDefault string
+                        fmt.Scanln(&amp;createDefault)
+
+                        if createDefault != "n" &amp;&amp; createDefault != "N" </span><span class="cov0" title="0">{
+                                homeDir, err := os.UserHomeDir()
+                                if err == nil </span><span class="cov0" title="0">{
+                                        syncDir := filepath.Join(homeDir, "Sync")
+
+                                        // Create directory if it doesn't exist
+                                        if _, err := os.Stat(syncDir); os.IsNotExist(err) </span><span class="cov0" title="0">{
+                                                if err := os.MkdirAll(syncDir, 0755); err != nil </span><span class="cov0" title="0">{
+                                                        fmt.Printf("Failed to create sync directory: %v\n", err)
+                                                }</span> else<span class="cov0" title="0"> {
+                                                        fmt.Printf("Created sync directory at: %s\n", syncDir)
+
+                                                        // Add to configuration
+                                                        folderID := "default"
+                                                        syncFolder := config.SyncFolder{
+                                                                ID:         folderID,
+                                                                Path:       syncDir,
+                                                                Enabled:    true,
+                                                                Exclude:    []string{"*.tmp", "*.bak", ".DS_Store"},
+                                                                TwoWaySync: true,
+                                                        }
+
+                                                        cfg.SyncFolders = append(cfg.SyncFolders, syncFolder)
+                                                }</span>
+                                        } else<span class="cov0" title="0"> {
+                                                fmt.Printf("Sync directory already exists at: %s\n", syncDir)
+
+                                                // Add to configuration if not already there
+                                                found := false
+                                                for _, folder := range cfg.SyncFolders </span><span class="cov0" title="0">{
+                                                        if folder.Path == syncDir </span><span class="cov0" title="0">{
+                                                                found = true
+                                                                break</span>
+                                                        }
+                                                }
+
+                                                <span class="cov0" title="0">if !found </span><span class="cov0" title="0">{
+                                                        folderID := "default"
+                                                        syncFolder := config.SyncFolder{
+                                                                ID:         folderID,
+                                                                Path:       syncDir,
+                                                                Enabled:    true,
+                                                                Exclude:    []string{"*.tmp", "*.bak", ".DS_Store"},
+                                                                TwoWaySync: true,
+                                                        }
+
+                                                        cfg.SyncFolders = append(cfg.SyncFolders, syncFolder)
+                                                }</span>
+                                        }
+                                }
+                        }
+
+                        // Save configuration
+                        <span class="cov0" title="0">if err := saveFn(); err != nil </span><span class="cov0" title="0">{
+                                return fmt.Errorf("failed to save configuration: %w", err)
+                        }</span>
+
+                        <span class="cov0" title="0">fmt.Println("\nInitialization complete!")
+                        fmt.Println("For a more detailed setup, run 'sync-manager wizard'.")
+                        fmt.Println("To start the sync agent, run 'sync-manager start'.")
+
+                        return nil</span>
+                },
+        }
+
+        <span class="cov0" title="0">return initCmd</span>
+}
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package commands
+
+import (
+        "fmt"
+        "os"
+        "time"
+
+        "github.com/martinshumberto/sync-manager/common/config"
+        "github.com/olekukonko/tablewriter"
+        "github.com/spf13/cobra"
+)
+
+// CreateMonitoringCommands returns the monitoring and status-related commands
+func CreateMonitoringCommands(cfg *config.Config) []*cobra.Command <span class="cov0" title="0">{
+        // Progress command - show detailed sync progress
+        progressCmd := &amp;cobra.Command{
+                Use:   "progress",
+                Short: "Show detailed synchronization progress",
+                Long:  `Display detailed progress information about the synchronization process.`,
+                RunE: func(cmd *cobra.Command, args []string) error </span><span class="cov0" title="0">{
+                        if len(cfg.SyncFolders) == 0 </span><span class="cov0" title="0">{
+                                fmt.Println("No folders configured for synchronization.")
+                                return nil
+                        }</span>
+
+                        <span class="cov0" title="0">fmt.Println("Synchronization Progress:")
+                        fmt.Println("------------------------")
+
+                        table := tablewriter.NewWriter(os.Stdout)
+                        table.SetHeader([]string{"Folder", "Status", "Progress", "Files Pending", "Last Error"})
+
+                        // In a real implementation, we would fetch this data from the agent
+                        // For now, we'll just display simulated data
+                        for _, folder := range cfg.SyncFolders </span><span class="cov0" title="0">{
+                                status := "Syncing"
+                                progress := "75%"
+                                filesPending := "12"
+                                lastError := "-"
+
+                                if !folder.Enabled </span><span class="cov0" title="0">{
+                                        status = "Disabled"
+                                        progress = "-"
+                                        filesPending = "-"
+                                }</span>
+
+                                <span class="cov0" title="0">table.Append([]string{
+                                        folder.Path,
+                                        status,
+                                        progress,
+                                        filesPending,
+                                        lastError,
+                                })</span>
+                        }
+
+                        <span class="cov0" title="0">table.Render()
+
+                        fmt.Println("\nOverall Statistics:")
+                        fmt.Println("Total Files Queued: 45")
+                        fmt.Println("Files Uploaded: 33")
+                        fmt.Println("Files Downloaded: 0")
+                        fmt.Println("Bytes Transferred: 128.5 MB")
+                        fmt.Println("Transfer Rate: 2.4 MB/s")
+                        fmt.Println("Estimated Time Remaining: 5m 32s")
+
+                        return nil</span>
+                },
+        }
+
+        // Logs command - show sync logs
+        <span class="cov0" title="0">logsCmd := &amp;cobra.Command{
+                Use:   "logs",
+                Short: "Show synchronization logs",
+                Long:  `Display logs from the synchronization process.`,
+                RunE: func(cmd *cobra.Command, args []string) error </span><span class="cov0" title="0">{
+                        tail, _ := cmd.Flags().GetInt("tail")
+                        follow, _ := cmd.Flags().GetBool("follow")
+
+                        // In a real implementation, we would:
+                        // 1. Locate the log file
+                        // 2. Read the last N lines
+                        // 3. Optionally follow the file for new entries
+
+                        fmt.Printf("Displaying last %d log entries", tail)
+                        if follow </span><span class="cov0" title="0">{
+                                fmt.Println(" (following)")
+                        }</span> else<span class="cov0" title="0"> {
+                                fmt.Println("")
+                        }</span>
+
+                        // Simulate log entries
+                        <span class="cov0" title="0">logEntries := []string{
+                                "2023-11-01 14:23:45 INFO  Starting synchronization of all folders",
+                                "2023-11-01 14:23:46 INFO  Scanning folder: Documents",
+                                "2023-11-01 14:23:47 INFO  Found 124 files, 15 directories in Documents",
+                                "2023-11-01 14:23:48 INFO  Uploading file: Documents/report.pdf",
+                                "2023-11-01 14:23:50 INFO  Uploading file: Documents/presentation.pptx",
+                                "2023-11-01 14:23:52 WARN  Network connection slow, reducing concurrency",
+                                "2023-11-01 14:23:55 INFO  Synchronization completed successfully",
+                        }
+
+                        // Calculate how many entries to show
+                        startIdx := 0
+                        if tail &lt; len(logEntries) </span><span class="cov0" title="0">{
+                                startIdx = len(logEntries) - tail
+                        }</span>
+
+                        // Display log entries
+                        <span class="cov0" title="0">for i := startIdx; i &lt; len(logEntries); i++ </span><span class="cov0" title="0">{
+                                fmt.Println(logEntries[i])
+                        }</span>
+
+                        // Simulate following logs if requested
+                        <span class="cov0" title="0">if follow </span><span class="cov0" title="0">{
+                                fmt.Println("\nSimulating log following (will exit after 3 entries)...")
+
+                                // Display a few more entries with delays
+                                time.Sleep(1 * time.Second)
+                                fmt.Println("2023-11-01 14:24:01 INFO  Starting scheduled sync check")
+
+                                time.Sleep(1 * time.Second)
+                                fmt.Println("2023-11-01 14:24:02 INFO  No changes detected in monitored folders")
+
+                                time.Sleep(1 * time.Second)
+                                fmt.Println("2023-11-01 14:24:05 INFO  Next check scheduled for 14:29:05")
+                        }</span>
+
+                        <span class="cov0" title="0">return nil</span>
+                },
+        }
+
+        // Add flags to logs command
+        <span class="cov0" title="0">logsCmd.Flags().IntP("tail", "n", 10, "Number of log entries to display")
+        logsCmd.Flags().BoolP("follow", "f", false, "Follow logs as they are written")
+
+        // Status command is already implemented in main.go, so we'll implement a repair command here
+        repairCmd := &amp;cobra.Command{
+                Use:   "repair",
+                Short: "Check and repair synchronization state",
+                Long:  `Verify the synchronization state and attempt to repair any inconsistencies.`,
+                RunE: func(cmd *cobra.Command, args []string) error </span><span class="cov0" title="0">{
+                        fmt.Println("Repairing synchronization state...")
+
+                        // In a real implementation, we would:
+                        // 1. Check the local database/state
+                        // 2. Verify it against remote state
+                        // 3. Reconcile differences
+                        // 4. Report results
+
+                        // Simulate repair process
+                        fmt.Println("Step 1/4: Checking local database...")
+                        time.Sleep(500 * time.Millisecond)
+
+                        fmt.Println("Step 2/4: Verifying against remote state...")
+                        time.Sleep(1 * time.Second)
+
+                        fmt.Println("Step 3/4: Reconciling differences...")
+                        time.Sleep(700 * time.Millisecond)
+
+                        fmt.Println("Step 4/4: Updating local database...")
+                        time.Sleep(500 * time.Millisecond)
+
+                        fmt.Println("\nRepair complete.")
+                        fmt.Println("Found and fixed 3 inconsistencies.")
+                        fmt.Println("All folders are now in a consistent state.")
+
+                        return nil
+                }</span>,
+        }
+
+        // Reset command
+        <span class="cov0" title="0">resetCmd := &amp;cobra.Command{
+                Use:   "reset",
+                Short: "Reset local synchronization state",
+                Long:  `Reset the local synchronization state while preserving files and configuration.`,
+                RunE: func(cmd *cobra.Command, args []string) error </span><span class="cov0" title="0">{
+                        fmt.Print("This will reset all synchronization state. Your files will not be deleted, but the agent will need to rescan everything. Continue? (y/n): ")
+
+                        var response string
+                        fmt.Scanln(&amp;response)
+
+                        if response != "y" &amp;&amp; response != "Y" </span><span class="cov0" title="0">{
+                                fmt.Println("Operation cancelled.")
+                                return nil
+                        }</span>
+
+                        <span class="cov0" title="0">fmt.Println("Resetting synchronization state...")
+
+                        // In a real implementation, we would:
+                        // 1. Stop the agent service
+                        // 2. Clear the database/state files
+                        // 3. Restart the agent
+
+                        // Simulate reset process
+                        time.Sleep(2 * time.Second)
+
+                        fmt.Println("Synchronization state has been reset.")
+                        fmt.Println("The agent will perform a full scan on next start.")
+
+                        return nil</span>
+                },
+        }
+
+        <span class="cov0" title="0">return []*cobra.Command{progressCmd, logsCmd, repairCmd, resetCmd}</span>
+}
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">package commands
+
+import (
+        "fmt"
+        "time"
+
+        "github.com/martinshumberto/sync-manager/common/config"
+        "github.com/spf13/cobra"
+)
+
+// CreateSyncCommands returns the sync-related commands
+func CreateSyncCommands(cfg *config.Config) []*cobra.Command <span class="cov10" title="5">{
+        // Sync command - force immediate sync
+        syncCmd := &amp;cobra.Command{
+                Use:   "sync",
+                Short: "Force synchronization of all folders",
+                Long:  `Force immediate synchronization of all monitored folders.`,
+                RunE: func(cmd *cobra.Command, args []string) error </span><span class="cov1" title="1">{
+                        if len(cfg.SyncFolders) == 0 </span><span class="cov0" title="0">{
+                                fmt.Println("No folders configured for synchronization.")
+                                return nil
+                        }</span>
+
+                        <span class="cov1" title="1">fmt.Println("Initiating synchronization for all folders...")
+
+                        // In a real implementation, we would:
+                        // 1. Connect to the agent service
+                        // 2. Trigger a sync operation
+                        // 3. Wait for it to complete or provide progress updates
+
+                        // Simulate sync process
+                        for i, folder := range cfg.SyncFolders </span><span class="cov1" title="1">{
+                                if !folder.Enabled </span><span class="cov0" title="0">{
+                                        fmt.Printf("Skipping disabled folder: %s\n", folder.Path)
+                                        continue</span>
+                                }
+
+                                <span class="cov1" title="1">fmt.Printf("Synchronizing folder %d/%d: %s\n", i+1, len(cfg.SyncFolders), folder.Path)
+                                // Simulate some processing time
+                                time.Sleep(500 * time.Millisecond)</span>
+                        }
+
+                        <span class="cov1" title="1">fmt.Println("Synchronization complete.")
+                        return nil</span>
+                },
+        }
+
+        // Sync-folder command - sync a specific folder
+        <span class="cov10" title="5">syncFolderCmd := &amp;cobra.Command{
+                Use:   "sync-folder &lt;path&gt;",
+                Short: "Synchronize a specific folder",
+                Long:  `Force immediate synchronization of a specific folder.`,
+                Args:  cobra.ExactArgs(1),
+                RunE: func(cmd *cobra.Command, args []string) error </span><span class="cov1" title="1">{
+                        targetPath := args[0]
+
+                        // Find the folder in config
+                        var targetFolder *config.SyncFolder
+                        for i := range cfg.SyncFolders </span><span class="cov1" title="1">{
+                                if cfg.SyncFolders[i].Path == targetPath </span><span class="cov1" title="1">{
+                                        targetFolder = &amp;cfg.SyncFolders[i]
+                                        break</span>
+                                }
+                        }
+
+                        <span class="cov1" title="1">if targetFolder == nil </span><span class="cov0" title="0">{
+                                return fmt.Errorf("folder not found in sync configuration: %s", targetPath)
+                        }</span>
+
+                        <span class="cov1" title="1">if !targetFolder.Enabled </span><span class="cov0" title="0">{
+                                return fmt.Errorf("folder is disabled: %s", targetPath)
+                        }</span>
+
+                        <span class="cov1" title="1">fmt.Printf("Synchronizing folder: %s\n", targetPath)
+
+                        // In a real implementation, we would:
+                        // 1. Connect to the agent service
+                        // 2. Trigger a sync operation for this specific folder
+                        // 3. Wait for it to complete or provide progress updates
+
+                        // Simulate sync process
+                        time.Sleep(1 * time.Second)
+
+                        fmt.Println("Folder synchronization complete.")
+                        return nil</span>
+                },
+        }
+
+        // Pause command
+        <span class="cov10" title="5">pauseCmd := &amp;cobra.Command{
+                Use:   "pause",
+                Short: "Pause synchronization",
+                Long:  `Pause the synchronization process temporarily.`,
+                RunE: func(cmd *cobra.Command, args []string) error </span><span class="cov1" title="1">{
+                        fmt.Println("Synchronization paused.")
+                        fmt.Println("Use 'sync-manager resume' to resume synchronization.")
+                        return nil
+                }</span>,
+        }
+
+        // Resume command
+        <span class="cov10" title="5">resumeCmd := &amp;cobra.Command{
+                Use:   "resume",
+                Short: "Resume synchronization",
+                Long:  `Resume previously paused synchronization.`,
+                RunE: func(cmd *cobra.Command, args []string) error </span><span class="cov1" title="1">{
+                        fmt.Println("Synchronization resumed.")
+                        return nil
+                }</span>,
+        }
+
+        <span class="cov10" title="5">return []*cobra.Command{syncCmd, syncFolderCmd, pauseCmd, resumeCmd}</span>
+}
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">package commands
+
+import (
+        "fmt"
+        "os"
+        "path/filepath"
+        "time"
+
+        "github.com/martinshumberto/sync-manager/common/config"
+        "github.com/spf13/cobra"
+)
+
+// CreateWizardCommand returns the interactive wizard command
+func CreateWizardCommand(cfg *config.Config, saveFn func() error) *cobra.Command <span class="cov0" title="0">{
+        // Wizard command - interactive setup
+        wizardCmd := &amp;cobra.Command{
+                Use:   "wizard",
+                Short: "Interactive configuration wizard",
+                Long:  `Start an interactive configuration wizard to set up sync-manager.`,
+                RunE: func(cmd *cobra.Command, args []string) error </span><span class="cov0" title="0">{
+                        fmt.Println("===================================================")
+                        fmt.Println("Welcome to the Sync Manager Configuration Wizard")
+                        fmt.Println("===================================================")
+                        fmt.Println("This wizard will guide you through setting up Sync Manager.")
+                        fmt.Println("Press Ctrl+C at any time to exit.")
+                        fmt.Println()
+
+                        // In a real implementation, we would use a UI library like promptui
+                        // For now, we'll simulate the interaction with simple fmt.Scan calls
+
+                        // Step 1: Configure storage
+                        fmt.Println("Step 1: Configure Storage")
+                        fmt.Println("------------------------")
+
+                        // Ask for storage provider
+                        fmt.Println("Select storage provider:")
+                        fmt.Println("1. MinIO (local development)")
+                        fmt.Println("2. Amazon S3")
+                        fmt.Println("3. Google Cloud Storage")
+                        fmt.Println("4. Local filesystem")
+                        fmt.Print("Enter choice [1]: ")
+
+                        var storageChoice string
+                        fmt.Scanln(&amp;storageChoice)
+
+                        if storageChoice == "" </span><span class="cov0" title="0">{
+                                storageChoice = "1"
+                        }</span>
+
+                        // Set storage provider based on choice
+                        <span class="cov0" title="0">switch storageChoice </span>{
+                        case "1":<span class="cov0" title="0">
+                                cfg.StorageProvider = "minio"
+                                fmt.Println("\nConfiguring MinIO storage:")
+
+                                fmt.Print("Enter MinIO endpoint [localhost:9000]: ")
+                                var endpoint string
+                                fmt.Scanln(&amp;endpoint)
+                                if endpoint == "" </span><span class="cov0" title="0">{
+                                        endpoint = "localhost:9000"
+                                }</span>
+                                <span class="cov0" title="0">cfg.MinioConfig.Endpoint = endpoint
+
+                                fmt.Print("Enter MinIO region [us-east-1]: ")
+                                var region string
+                                fmt.Scanln(&amp;region)
+                                if region == "" </span><span class="cov0" title="0">{
+                                        region = "us-east-1"
+                                }</span>
+                                <span class="cov0" title="0">cfg.MinioConfig.Region = region
+
+                                fmt.Print("Enter MinIO bucket [sync-manager]: ")
+                                var bucket string
+                                fmt.Scanln(&amp;bucket)
+                                if bucket == "" </span><span class="cov0" title="0">{
+                                        bucket = "sync-manager"
+                                }</span>
+                                <span class="cov0" title="0">cfg.MinioConfig.Bucket = bucket
+
+                                fmt.Print("Enter MinIO access key [minioadmin]: ")
+                                var accessKey string
+                                fmt.Scanln(&amp;accessKey)
+                                if accessKey == "" </span><span class="cov0" title="0">{
+                                        accessKey = "minioadmin"
+                                }</span>
+                                <span class="cov0" title="0">cfg.MinioConfig.AccessKey = accessKey
+
+                                fmt.Print("Enter MinIO secret key [minioadmin]: ")
+                                var secretKey string
+                                fmt.Scanln(&amp;secretKey)
+                                if secretKey == "" </span><span class="cov0" title="0">{
+                                        secretKey = "minioadmin"
+                                }</span>
+                                <span class="cov0" title="0">cfg.MinioConfig.SecretKey = secretKey
+
+                                fmt.Print("Use SSL? [y/N]: ")
+                                var useSSL string
+                                fmt.Scanln(&amp;useSSL)
+                                cfg.MinioConfig.UseSSL = useSSL == "y" || useSSL == "Y"
+
+                                fmt.Println("\nMinIO configuration complete!")</span>
+                        case "2":<span class="cov0" title="0">
+                                cfg.StorageProvider = "s3"
+                                fmt.Println("\nConfiguring Amazon S3 storage:")
+
+                                fmt.Print("Enter AWS region [us-east-1]: ")
+                                var region string
+                                fmt.Scanln(&amp;region)
+                                if region == "" </span><span class="cov0" title="0">{
+                                        region = "us-east-1"
+                                }</span>
+                                <span class="cov0" title="0">cfg.S3Config.Region = region
+
+                                fmt.Print("Enter S3 bucket name: ")
+                                var bucket string
+                                fmt.Scanln(&amp;bucket)
+                                if bucket != "" </span><span class="cov0" title="0">{
+                                        cfg.S3Config.Bucket = bucket
+                                }</span>
+
+                                <span class="cov0" title="0">fmt.Print("Use a custom endpoint? (for compatible services) [y/N]: ")
+                                var customEndpoint string
+                                fmt.Scanln(&amp;customEndpoint)
+
+                                if customEndpoint == "y" || customEndpoint == "Y" </span><span class="cov0" title="0">{
+                                        fmt.Print("Enter endpoint URL: ")
+                                        var endpoint string
+                                        fmt.Scanln(&amp;endpoint)
+                                        cfg.S3Config.Endpoint = endpoint
+
+                                        fmt.Print("Enter access key: ")
+                                        var accessKey string
+                                        fmt.Scanln(&amp;accessKey)
+                                        cfg.S3Config.AccessKey = accessKey
+
+                                        fmt.Print("Enter secret key: ")
+                                        var secretKey string
+                                        fmt.Scanln(&amp;secretKey)
+                                        cfg.S3Config.SecretKey = secretKey
+
+                                        fmt.Print("Use path style? [y/N]: ")
+                                        var pathStyle string
+                                        fmt.Scanln(&amp;pathStyle)
+                                        cfg.S3Config.PathStyle = pathStyle == "y" || pathStyle == "Y"
+                                }</span>
+
+                                <span class="cov0" title="0">fmt.Println("\nS3 configuration complete!")</span>
+                        case "3":<span class="cov0" title="0">
+                                cfg.StorageProvider = "gcs"
+                                fmt.Println("\nConfiguring Google Cloud Storage:")
+
+                                fmt.Print("Enter GCS project ID: ")
+                                var projectID string
+                                fmt.Scanln(&amp;projectID)
+                                cfg.GCSConfig.ProjectID = projectID
+
+                                fmt.Print("Enter GCS bucket name: ")
+                                var bucket string
+                                fmt.Scanln(&amp;bucket)
+                                cfg.GCSConfig.Bucket = bucket
+
+                                fmt.Print("Enter path to credentials file (leave empty for default credentials): ")
+                                var credentialsFile string
+                                fmt.Scanln(&amp;credentialsFile)
+                                cfg.GCSConfig.CredentialsFile = credentialsFile
+
+                                fmt.Println("\nGCS configuration complete!")</span>
+                        case "4":<span class="cov0" title="0">
+                                cfg.StorageProvider = "local"
+                                fmt.Println("\nConfiguring local filesystem storage:")
+
+                                // Determine default directory
+                                homeDir, err := os.UserHomeDir()
+                                defaultDir := filepath.Join(homeDir, "sync-manager-data")
+                                if err != nil </span><span class="cov0" title="0">{
+                                        defaultDir = "./sync-manager-data"
+                                }</span>
+
+                                <span class="cov0" title="0">fmt.Printf("Enter root directory [%s]: ", defaultDir)
+                                var rootDir string
+                                fmt.Scanln(&amp;rootDir)
+                                if rootDir == "" </span><span class="cov0" title="0">{
+                                        rootDir = defaultDir
+                                }</span>
+                                <span class="cov0" title="0">cfg.LocalConfig.RootDir = rootDir
+
+                                // Create directory if it doesn't exist
+                                if _, err := os.Stat(rootDir); os.IsNotExist(err) </span><span class="cov0" title="0">{
+                                        if err := os.MkdirAll(rootDir, 0755); err != nil </span><span class="cov0" title="0">{
+                                                fmt.Printf("Warning: Failed to create directory: %v\n", err)
+                                        }</span> else<span class="cov0" title="0"> {
+                                                fmt.Printf("Created storage directory at: %s\n", rootDir)
+                                        }</span>
+                                }
+
+                                <span class="cov0" title="0">fmt.Println("\nLocal storage configuration complete!")</span>
+                        default:<span class="cov0" title="0">
+                                fmt.Println("Invalid choice. Using MinIO as default.")
+                                cfg.StorageProvider = "minio"</span>
+                        }
+
+                        // Step 2: Configure sync settings
+                        <span class="cov0" title="0">fmt.Println("\nStep 2: Configure Sync Settings")
+                        fmt.Println("------------------------------")
+
+                        // Sync interval
+                        fmt.Print("Enter sync interval in minutes [5]: ")
+                        var intervalStr string
+                        fmt.Scanln(&amp;intervalStr)
+
+                        if intervalStr == "" </span><span class="cov0" title="0">{
+                                cfg.SyncInterval = 5 * time.Minute
+                        }</span> else<span class="cov0" title="0"> {
+                                var interval int
+                                fmt.Sscanf(intervalStr, "%d", &amp;interval)
+                                if interval &lt; 1 </span><span class="cov0" title="0">{
+                                        interval = 5
+                                }</span>
+                                <span class="cov0" title="0">cfg.SyncInterval = time.Duration(interval) * time.Minute</span>
+                        }
+
+                        // Concurrency
+                        <span class="cov0" title="0">fmt.Print("Enter max concurrent transfers [4]: ")
+                        var concurrencyStr string
+                        fmt.Scanln(&amp;concurrencyStr)
+
+                        if concurrencyStr == "" </span><span class="cov0" title="0">{
+                                cfg.MaxConcurrency = 4
+                        }</span> else<span class="cov0" title="0"> {
+                                var concurrency int
+                                fmt.Sscanf(concurrencyStr, "%d", &amp;concurrency)
+                                if concurrency &lt; 1 </span><span class="cov0" title="0">{
+                                        concurrency = 4
+                                }</span>
+                                <span class="cov0" title="0">cfg.MaxConcurrency = concurrency</span>
+                        }
+
+                        // Bandwidth limit
+                        <span class="cov0" title="0">fmt.Print("Enter bandwidth limit in KB/s (0 for unlimited) [0]: ")
+                        var bandwidthStr string
+                        fmt.Scanln(&amp;bandwidthStr)
+
+                        if bandwidthStr == "" </span><span class="cov0" title="0">{
+                                cfg.ThrottleBytes = 0
+                        }</span> else<span class="cov0" title="0"> {
+                                var bandwidth int64
+                                fmt.Sscanf(bandwidthStr, "%d", &amp;bandwidth)
+                                cfg.ThrottleBytes = bandwidth * 1024 // Convert KB/s to bytes/s
+                        }</span>
+
+                        // Step 3: Add folders
+                        <span class="cov0" title="0">fmt.Println("\nStep 3: Add Folders to Sync")
+                        fmt.Println("---------------------------")
+
+                        addMoreFolders := true
+                        for addMoreFolders </span><span class="cov0" title="0">{
+                                fmt.Print("Enter folder path to sync: ")
+                                var folderPath string
+                                fmt.Scanln(&amp;folderPath)
+
+                                if folderPath == "" </span><span class="cov0" title="0">{
+                                        fmt.Println("No folder path entered. Skipping folder addition.")
+                                        addMoreFolders = false
+                                        continue</span>
+                                }
+
+                                // Expand ~ to home directory if present
+                                <span class="cov0" title="0">if folderPath == "~" || folderPath[:2] == "~/" </span><span class="cov0" title="0">{
+                                        home, err := os.UserHomeDir()
+                                        if err == nil </span><span class="cov0" title="0">{
+                                                if folderPath == "~" </span><span class="cov0" title="0">{
+                                                        folderPath = home
+                                                }</span> else<span class="cov0" title="0"> {
+                                                        folderPath = filepath.Join(home, folderPath[2:])
+                                                }</span>
+                                        }
+                                }
+
+                                // Check if folder exists
+                                <span class="cov0" title="0">_, err := os.Stat(folderPath)
+                                if os.IsNotExist(err) </span><span class="cov0" title="0">{
+                                        fmt.Printf("Folder %s does not exist. Do you want to create it? [Y/n]: ", folderPath)
+                                        var createFolder string
+                                        fmt.Scanln(&amp;createFolder)
+
+                                        if createFolder != "n" &amp;&amp; createFolder != "N" </span><span class="cov0" title="0">{
+                                                if err := os.MkdirAll(folderPath, 0755); err != nil </span><span class="cov0" title="0">{
+                                                        fmt.Printf("Failed to create folder: %v\n", err)
+                                                        continue</span>
+                                                }
+                                                <span class="cov0" title="0">fmt.Println("Folder created successfully.")</span>
+                                        } else<span class="cov0" title="0"> {
+                                                fmt.Println("Folder creation skipped.")
+                                                continue</span>
+                                        }
+                                }
+
+                                // Set up exclusion patterns
+                                <span class="cov0" title="0">fmt.Print("Enter file patterns to exclude (comma-separated, e.g. *.tmp,*.bak): ")
+                                var excludePatternsStr string
+                                fmt.Scanln(&amp;excludePatternsStr)
+
+                                var excludePatterns []string
+                                if excludePatternsStr != "" </span><span class="cov0" title="0">{
+                                        for _, pattern := range filepath.SplitList(excludePatternsStr) </span><span class="cov0" title="0">{
+                                                if pattern != "" </span><span class="cov0" title="0">{
+                                                        excludePatterns = append(excludePatterns, pattern)
+                                                }</span>
+                                        }
+                                }
+
+                                // Create folder configuration
+                                <span class="cov0" title="0">folderID := fmt.Sprintf("folder-%d", len(cfg.SyncFolders)+1)
+                                syncFolder := config.SyncFolder{
+                                        ID:         folderID,
+                                        Path:       folderPath,
+                                        Enabled:    true,
+                                        Exclude:    excludePatterns,
+                                        TwoWaySync: true,
+                                }
+
+                                // Add to configuration
+                                cfg.SyncFolders = append(cfg.SyncFolders, syncFolder)
+
+                                fmt.Printf("Folder %s added successfully.\n", folderPath)
+
+                                // Ask if user wants to add more folders
+                                fmt.Print("Do you want to add another folder? [Y/n]: ")
+                                var addMore string
+                                fmt.Scanln(&amp;addMore)
+
+                                addMoreFolders = addMore != "n" &amp;&amp; addMore != "N"</span>
+                        }
+
+                        // Save configuration
+                        <span class="cov0" title="0">if err := saveFn(); err != nil </span><span class="cov0" title="0">{
+                                return fmt.Errorf("failed to save configuration: %w", err)
+                        }</span>
+
+                        <span class="cov0" title="0">fmt.Println("\nConfiguration complete!")
+                        fmt.Println("===================================================")
+                        fmt.Println("Sync Manager has been successfully configured.")
+                        fmt.Println("You can now start the sync agent with: sync-manager start")
+                        fmt.Println("===================================================")
+
+                        return nil</span>
+                },
+        }
+
+        <span class="cov0" title="0">return wizardCmd</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>

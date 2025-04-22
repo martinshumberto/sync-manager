@@ -1,0 +1,7 @@
+# Air configuration for sync-manager CLI
+root = "."
+tmp_dir = "tmp"
+
+[build]
+cmd = "CGO_ENABLED=1 go build -o ./tmp/main ./cmd"
+bin = "./tmp/main"
